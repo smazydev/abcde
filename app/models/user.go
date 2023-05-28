@@ -1,12 +1,15 @@
 package models
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type User struct {
-	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
-	BusinessID uuid.UUID `json:"businessId"`
-	Username   string    `json:"username"`
-	Email      string    `json:"email"`
-	Password   string    `json:"password"`
-	Roles      string    `json:"roles"`
+	ID         uuid.UUID  `gorm:"type:uuid;primaryKey;default:gen_random_uuid()" json:"id"`
+	Businesses []Business `json:"businesses" gorm:"many2many:user_businesses;"`
+	Name       string     `json:"name"`
+	Username   string     `json:"username"`
+	Email      string     `gorm:"unique" json:"email"`
+	Password   string     `json:"-"`
+	Roles      string     `json:"roles"`
 }

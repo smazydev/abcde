@@ -6,6 +6,7 @@ import (
 	"github.com/smazydev/abcde/app/repositories"
 )
 
-func SetupAuthRoutes(app *fiber.App, authService services.AuthService, userRepo repositories.UserRepository) {
+func SetupAuthRoutes(app *fiber.App, userRepo repositories.UserRepository) {
 	app.Post("/api/login", handlers.Login(userRepo))
+	app.Post("/api/signup", handlers.Signup(userRepo))
 }

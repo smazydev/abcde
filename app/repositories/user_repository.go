@@ -1,12 +1,15 @@
 package repositories
 
 import (
+	"fmt"
+
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/smazydev/abcde/app/models"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
-	Create(user *models.User) error
+	Create(user *models.User) (*models.User, error)
 	GetByID(id uint) (*models.User, error)
 	GetByUsername(username string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
@@ -22,8 +25,15 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 	}
 }
 
-func (r *userRepository) Create(user *models.User) error {
-	return r.db.Create(user).Error
+func (r *userRepository) Create(user *models.User) (*models.User, error) {
+	err := r.db.Create(user).Error
+	if err != nil {
+		if IsDuplicateKeyError(err) {
+			return nil, fmt.Errorf("User with the same email already exists")
+		}
+		return nil, err
+	}
+	return user, nil
 }
 
 func (r *userRepository) GetByID(id uint) (*models.User, error) {
@@ -53,4 +63,12 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	}
 
 	return &user, nil
+}
+
+func IsDuplicateKeyError(err error) bool {
+	pgErr, ok := err.(*pgconn.PgError)
+	if !ok {
+		return false
+	}
+	return pgErr.Code == "23505"
 }

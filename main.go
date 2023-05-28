@@ -6,7 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	"github.com/smazydev/abcde/app/middleware"
+	"github.com/smazydev/abcde/app/globals"
 	"github.com/smazydev/abcde/app/repositories"
 	"github.com/smazydev/abcde/app/routes"
 	"github.com/smazydev/abcde/app/services"
@@ -29,17 +29,17 @@ func main() {
 		AllowMethods: "GET,POST,PUT,DELETE",
 	}))
 
+	//global variables
+
 	//Initialize repositories.
 	userRepo := repositories.NewUserRepository(db)
 	businessRepo := repositories.NewBusinessRepository(db)
-
 	//Services
-	authService := services.NewAuthService(userRepo)
-	authMiddleware := middleware.AuthMiddleware(authService)
+	globals.AuthService = services.NewAuthService(userRepo)
 	// Routes
-	routes.SetupBusinessRoutes(app, db, businessRepo, authService)
-	routes.SetupUserRoutes(app, db, userRepo, authService)
-	routes.SetupAuthRoutes(app, authService, userRepo)
+	routes.SetupBusinessRoutes(app, db, businessRepo)
+	routes.SetupUserRoutes(app, db, userRepo)
+	routes.SetupAuthRoutes(app, userRepo)
 	// Start the server
 	log.Fatal(app.Listen(":3000"))
 }
