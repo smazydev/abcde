@@ -1,12 +1,17 @@
 package handlers
 
 import (
+	"errors"
+	"log"
+	"strings"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/smazydev/abcde/app/models"
 	"github.com/smazydev/abcde/app/repositories"
 	"github.com/smazydev/abcde/app/utils"
 	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
 
 func Login(repo repositories.UserRepository) fiber.Handler {
@@ -24,6 +29,7 @@ func Login(repo repositories.UserRepository) fiber.Handler {
 		// Assume a successful login for demonstration purposes
 
 		fetchedUser, err := repo.GetByEmail(user.Email)
+		log.Default().Print(fetchedUser)
 
 		if err != nil {
 			return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -41,8 +47,8 @@ func Login(repo repositories.UserRepository) fiber.Handler {
 
 		// Passwords match
 
-		// Generate JWT
-		token, err := utils.GenerateJWT(user.ID.String())
+		log.Print(fetchedUser.ID) // Generate JWT
+		token, err := utils.GenerateJWT(fetchedUser.ID.String())
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 				"message": "Failed to generate JWT",
@@ -77,6 +83,16 @@ func Signup(repo repositories.UserRepository) fiber.Handler {
 		user.Password = string(hashedPassword)
 
 		result, err := repo.Create(&user)
+		log.Default().Print(err)
+
+		log.Default().Print(errors.Is(err, gorm.ErrDuplicatedKey))
+		if err != nil {
+			if strings.Contains(string(err.Error()), "duplicate key value violates unique constraint") {
+				return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+					"message": "Failed to create the user, email already exists",
+				})
+			}
+		}
 
 		if err != nil {
 			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

@@ -9,7 +9,7 @@ import (
 )
 
 func ConnectDB() *gorm.DB {
-	dsn := "postgresql://postgres:lsgHmBTAwn4EojDoEjcu@containers-us-west-148.railway.app:6358/railway"
+	dsn := "postgres://postgres:C!tynet23@localhost:5432/erp"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Failed to connect to the database:", err)

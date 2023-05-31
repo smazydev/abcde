@@ -1,18 +1,17 @@
 package repositories
 
 import (
-	"fmt"
-
-	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/smazydev/abcde/app/models"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
 	Create(user *models.User) (*models.User, error)
-	GetByID(id uint) (*models.User, error)
+	GetByID(id string) (*models.User, error)
 	GetByUsername(username string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
+	Update(user *models.User, id string) error
+	Delete(userId string) error
 }
 
 type userRepository struct {
@@ -28,17 +27,14 @@ func NewUserRepository(db *gorm.DB) UserRepository {
 func (r *userRepository) Create(user *models.User) (*models.User, error) {
 	err := r.db.Create(user).Error
 	if err != nil {
-		if IsDuplicateKeyError(err) {
-			return nil, fmt.Errorf("User with the same email already exists")
-		}
 		return nil, err
 	}
 	return user, nil
 }
 
-func (r *userRepository) GetByID(id uint) (*models.User, error) {
+func (r *userRepository) GetByID(id string) (*models.User, error) {
 	var user models.User
-	err := r.db.First(&user, id).Error
+	err := r.db.Where("id = ?", id).First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -65,10 +61,17 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func IsDuplicateKeyError(err error) bool {
-	pgErr, ok := err.(*pgconn.PgError)
-	if !ok {
-		return false
-	}
-	return pgErr.Code == "23505"
+func (r *userRepository) Update(user *models.User, id string) error {
+	return r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+		"name":       user.Name,
+		"username":   user.Username,
+		"email":      user.Email,
+		"businesses": user.Businesses,
+		"roles":      user.Roles,
+		// Add other fields that can be updated
+	}).Error
+}
+
+func (r *userRepository) Delete(userID string) error {
+	return r.db.Delete(&models.User{}, userID).Error
 }

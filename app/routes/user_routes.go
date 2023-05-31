@@ -8,9 +8,22 @@ import (
 )
 
 func SetupUserRoutes(app *fiber.App, db *gorm.DB, userRepo repositories.UserRepository) {
-	userHandler := func(c *fiber.Ctx) error {
+	app.Post("api/users", func(c *fiber.Ctx) error {
 		return handlers.CreateUser(c, userRepo)
-	}
+	})
 
-	app.Post("/api/user", userHandler)
+	// Update a user
+	app.Put("api/users/:id", func(c *fiber.Ctx) error {
+		return handlers.UpdateUser(c, userRepo)
+	})
+
+	// Get a user by ID
+	app.Get("api/users/:id", func(c *fiber.Ctx) error {
+		return handlers.GetUserByID(c, userRepo)
+	})
+
+	// Delete a user
+	app.Delete("api/users/:id", func(c *fiber.Ctx) error {
+		return handlers.DeleteUser(c, userRepo)
+	})
 }
