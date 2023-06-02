@@ -65,8 +65,14 @@ func GetUserByID(c *fiber.Ctx, repo repositories.UserRepository) error {
 	// Parse user ID from path parameter
 	userID := c.Params("id")
 
+	parsedId, err := uuid.Parse(userID)
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "Invalid User ID",
+		})
+	}
 	// Retrieve the user by ID
-	user, err := repo.GetByID(string(userID))
+	user, err := repo.GetByID(parsedId)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": "User not found",

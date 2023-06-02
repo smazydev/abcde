@@ -1,13 +1,14 @@
 package repositories
 
 import (
+	"github.com/google/uuid"
 	"github.com/smazydev/abcde/app/models"
 	"gorm.io/gorm"
 )
 
 type UserRepository interface {
 	Create(user *models.User) (*models.User, error)
-	GetByID(id string) (*models.User, error)
+	GetByID(id uuid.UUID) (*models.User, error)
 	GetByUsername(username string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
 	Update(user *models.User, id string) error
@@ -32,9 +33,9 @@ func (r *userRepository) Create(user *models.User) (*models.User, error) {
 	return user, nil
 }
 
-func (r *userRepository) GetByID(id string) (*models.User, error) {
+func (r *userRepository) GetByID(id uuid.UUID) (*models.User, error) {
 	var user models.User
-	err := r.db.Where("id = ?", id).First(&user).Error
+	err := r.db.Preload("Businesses").First(&user, "id = ?", id).Error
 	if err != nil {
 		return nil, err
 	}
