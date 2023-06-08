@@ -6,10 +6,10 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/smazydev/abcde/app/models"
-	"github.com/smazydev/abcde/app/repositories"
+	"github.com/smazydev/abcde/app/services"
 )
 
-func CreateBusiness(c *fiber.Ctx, repo repositories.BusinessRepository) error {
+func CreateBusiness(c *fiber.Ctx, containerService services.Container) error {
 	// Parse request body
 	var business models.Business
 	userId := c.Locals("userID")
@@ -31,7 +31,8 @@ func CreateBusiness(c *fiber.Ctx, repo repositories.BusinessRepository) error {
 	}
 
 	// Create the business
-	err = repo.Create(&business)
+	businessService := containerService.GetBusinessService()
+	createdBusiness, err := businessService.Create(&business)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to create the business",
@@ -40,16 +41,17 @@ func CreateBusiness(c *fiber.Ctx, repo repositories.BusinessRepository) error {
 
 	return c.JSON(fiber.Map{
 		"message": "Business created successfully",
-		"data":    business,
+		"data":    createdBusiness,
 	})
 }
 
-func GetAllBusinessesForUser(c *fiber.Ctx, repo repositories.BusinessRepository) error {
+func GetAllBusinessesForUser(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
 	userId := c.Locals("userID")
 	uuidValue := userId.(string)
 	// Get all businesses by owner Id or user Id
-	businessesOwnedByUser, err := repo.GetBusinessesByOwnerID(uuidValue)
+	businessService := containerService.GetBusinessService()
+	businessesOwnedByUser, err := businessService.GetBusinessesByOwnerID(uuidValue)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{

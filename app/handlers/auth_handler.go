@@ -8,13 +8,13 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/smazydev/abcde/app/models"
-	"github.com/smazydev/abcde/app/repositories"
+	"github.com/smazydev/abcde/app/services"
 	"github.com/smazydev/abcde/app/utils"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
-func Login(repo repositories.UserRepository) fiber.Handler {
+func Login(container *services.Container) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		// Parse request body
 		var user models.User
@@ -27,8 +27,9 @@ func Login(repo repositories.UserRepository) fiber.Handler {
 
 		// TODO: Perform user authentication, validate credentials, etc.
 		// Assume a successful login for demonstration purposes
+		userService := container.GetUserService()
 
-		fetchedUser, err := repo.GetByEmail(user.Email)
+		fetchedUser, err := userService.GetUserByEmail(user.Email)
 		log.Default().Print(fetchedUser)
 
 		if err != nil {
@@ -61,7 +62,7 @@ func Login(repo repositories.UserRepository) fiber.Handler {
 	}
 }
 
-func Signup(repo repositories.UserRepository) fiber.Handler {
+func Signup(container *services.Container) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		var user models.User
 		err := c.BodyParser(&user)
@@ -82,7 +83,8 @@ func Signup(repo repositories.UserRepository) fiber.Handler {
 		user.ID = uuid.New()
 		user.Password = string(hashedPassword)
 
-		result, err := repo.Create(&user)
+		userService := container.GetUserService()
+		result, err := userService.CreateUser(&user)
 		log.Default().Print(err)
 
 		log.Default().Print(errors.Is(err, gorm.ErrDuplicatedKey))

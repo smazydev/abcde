@@ -1,14 +1,16 @@
 package handlers
 
 import (
+	"log"
+
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
 	"github.com/smazydev/abcde/app/models"
-	"github.com/smazydev/abcde/app/repositories"
+	"github.com/smazydev/abcde/app/services"
 )
 
-func CreateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
+func CreateUser(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
 	var user models.User
 	err := c.BodyParser(&user)
@@ -19,8 +21,9 @@ func CreateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
 	}
 	user.ID = uuid.New()
 
+	userService := containerService.GetUserService()
 	// Create the user
-	createdUser, err := repo.Create(&user)
+	createdUser, err := userService.CreateUser(&user)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -35,11 +38,20 @@ func CreateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
 	})
 }
 
-func UpdateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
+func UpdateUser(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
 	var user models.User
 	err := c.BodyParser(&user)
 	usrId := c.Params("id")
+	log.Print("USERID", usrId)
+	parsedId, err := uuid.Parse(usrId)
+
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid userId",
+		})
+	}
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
@@ -47,7 +59,8 @@ func UpdateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
 	}
 
 	// Update the user
-	err = repo.Update(&user, usrId)
+	userService := containerService.GetUserService()
+	updatedUser, err := userService.UpdateUser(&user, parsedId)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update the user",
@@ -57,11 +70,11 @@ func UpdateUser(c *fiber.Ctx, repo repositories.UserRepository) error {
 
 	return c.JSON(fiber.Map{
 		"message": "User updated successfully",
-		"data":    user,
+		"data":    updatedUser,
 	})
 }
 
-func GetUserByID(c *fiber.Ctx, repo repositories.UserRepository) error {
+func GetUserByID(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse user ID from path parameter
 	userID := c.Params("id")
 
@@ -72,7 +85,8 @@ func GetUserByID(c *fiber.Ctx, repo repositories.UserRepository) error {
 		})
 	}
 	// Retrieve the user by ID
-	user, err := repo.GetByID(parsedId)
+	userService := containerService.GetUserService()
+	user, err := userService.GetUserByID(parsedId)
 	if err != nil {
 		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
 			"message": "User not found",
@@ -85,12 +99,13 @@ func GetUserByID(c *fiber.Ctx, repo repositories.UserRepository) error {
 	})
 }
 
-func DeleteUser(c *fiber.Ctx, repo repositories.UserRepository) error {
+func DeleteUser(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse user ID from path parameter
 	userID := c.Params("id")
 
 	// Delete the user
-	err := repo.Delete(string(userID))
+	userService := containerService.GetUserService()
+	err := userService.DeleteUser(string(userID))
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to delete the user",

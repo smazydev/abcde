@@ -5,17 +5,17 @@ import (
 	"github.com/smazydev/abcde/app/globals"
 	"github.com/smazydev/abcde/app/handlers"
 	"github.com/smazydev/abcde/app/middleware"
-	"github.com/smazydev/abcde/app/repositories"
+	"github.com/smazydev/abcde/app/services"
 	"gorm.io/gorm"
 )
 
-func SetupBusinessRoutes(app *fiber.App, db *gorm.DB, businessRepo repositories.BusinessRepository) {
+func SetupBusinessRoutes(app *fiber.App, db *gorm.DB, containerService *services.Container) {
 	app.Post("/api/businesses", middleware.AuthMiddleware(globals.AuthService), func(c *fiber.Ctx) error {
-		return handlers.CreateBusiness(c, businessRepo)
+		return handlers.CreateBusiness(c, containerService)
 	})
 
 	app.Get("/api/businesses", middleware.AuthMiddleware(globals.AuthService), func(c *fiber.Ctx) error {
-		return handlers.GetAllBusinessesForUser(c, businessRepo)
+		return handlers.GetAllBusinessesForUser(c, containerService)
 	})
 
 }

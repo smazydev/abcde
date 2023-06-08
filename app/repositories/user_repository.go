@@ -1,6 +1,8 @@
 package repositories
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/smazydev/abcde/app/models"
 	"gorm.io/gorm"
@@ -11,7 +13,7 @@ type UserRepository interface {
 	GetByID(id uuid.UUID) (*models.User, error)
 	GetByUsername(username string) (*models.User, error)
 	GetByEmail(email string) (*models.User, error)
-	Update(user *models.User, id string) error
+	Update(user *models.User, id uuid.UUID) (*models.User, error)
 	Delete(userId string) error
 }
 
@@ -62,15 +64,24 @@ func (r *userRepository) GetByEmail(email string) (*models.User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) Update(user *models.User, id string) error {
-	return r.db.Model(&models.User{}).Where("id = ?", user.ID).Updates(map[string]interface{}{
+func (r *userRepository) Update(user *models.User, id uuid.UUID) (*models.User, error) {
+	log.Print("ID IN REPO", id)
+	if err := r.db.Model(&models.User{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"name":       user.Name,
 		"username":   user.Username,
 		"email":      user.Email,
-		"businesses": user.Businesses,
+		"Businesses": user.Businesses,
 		"roles":      user.Roles,
 		// Add other fields that can be updated
-	}).Error
+	}).Error; err != nil {
+		return nil, err
+	}
+	// Retrieve the updated user from the database
+	updatedUser := &models.User{}
+	if err := r.db.First(updatedUser, id).Error; err != nil {
+		return nil, err
+	}
+	return updatedUser, nil
 }
 
 func (r *userRepository) Delete(userID string) error {
