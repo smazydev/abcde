@@ -5,8 +5,9 @@ import (
 )
 
 type Employee struct {
-	ID         uuid.UUID `json:"id" gorm:"primaryKey"`
+	ID         uuid.UUID `gorm:"type:uuid;primaryKey" json:"id"`
 	Name       string    `json:"name"`
 	Position   string    `json:"position"`
-	BusinessID int       `json:"businessId"`
+	BusinessID uuid.UUID `gorm:"type:uuid" json:"businessId"`
+	Business   Business  `gorm:"foreignKey:BusinessID" json:"business"`
 }

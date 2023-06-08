@@ -18,7 +18,7 @@ func ConnectDB() *gorm.DB {
 }
 
 func MigrateDB(db *gorm.DB) {
-	err := db.AutoMigrate(&models.Business{}, &models.User{})
+	err := db.AutoMigrate(&models.Business{}, &models.User{}, &models.Product{}, &models.Employee{})
 	if err != nil {
 		log.Fatal("Failed to migrate the database schema:", err)
 	}

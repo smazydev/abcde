@@ -31,13 +31,15 @@ func main() {
 	//Initialize repositories.
 	userRepo := repositories.NewUserRepository(db)
 	businessRepo := repositories.NewBusinessRepository(db)
+	productRepo := repositories.NewProductRepository(db)
 
 	//initialize services
 	authService := services.NewAuthService(userRepo)
 	userService := services.NewUserService(userRepo)
 	businessService := services.NewBusinessService(businessRepo)
+	productService := services.NewProductService(productRepo)
 
-	containerService := services.NewContainer(*userService, authService, *businessService)
+	containerService := services.NewContainer(*userService, authService, *businessService, *productService)
 
 	//Services
 	// Routes

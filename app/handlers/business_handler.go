@@ -9,7 +9,7 @@ import (
 	"github.com/smazydev/abcde/app/services"
 )
 
-func CreateBusiness(c *fiber.Ctx, containerService services.Container) error {
+func CreateBusiness(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
 	var business models.Business
 	userId := c.Locals("userID")
@@ -23,7 +23,16 @@ func CreateBusiness(c *fiber.Ctx, containerService services.Container) error {
 	err = c.BodyParser(&business)
 	businessId := uuid.New()
 	business.OwnerID = uuidValue
+	userService := containerService.GetUserService()
+	fetchedUser, err := userService.GetUserByID(uuidValue)
+
+	if err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
 	business.ID = businessId
+	business.Owner = *fetchedUser
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
