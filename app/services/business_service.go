@@ -18,6 +18,7 @@ func NewBusinessService(businessRepository repositories.BusinessRepository) *Bus
 func (s *BusinessService) Create(business *models.Business) (*models.Business, error) {
 	// Perform any necessary business logic or validation here
 	createdBusiness, err := s.businessRepository.Create(business)
+	createdBusiness.Owner.Businesses = nil
 	return createdBusiness, err
 
 }

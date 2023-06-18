@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"log"
-
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 
@@ -12,18 +10,16 @@ import (
 
 func CreateProduct(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
-	var product models.Product
-	err := c.BodyParser(&product)
+	var productJSON models.Product
+	err := c.BodyParser(&productJSON)
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid request body",
 		})
 	}
-	product.ID = uuid.New()
-
 	productService := containerService.GetProductService()
 	// Create the product
-	createdproduct, err := productService.CreateProduct(&product)
+	createdproduct, err := productService.CreateProduct(&productJSON)
 
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -42,8 +38,13 @@ func UpdateProduct(c *fiber.Ctx, containerService *services.Container) error {
 	// Parse request body
 	var product models.Product
 	err := c.BodyParser(&product)
+	if err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Invalid Product Id",
+		})
+	}
+
 	usrId := c.Params("id")
-	log.Print("productID", usrId)
 	parsedId, err := uuid.Parse(usrId)
 
 	if err != nil {

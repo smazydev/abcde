@@ -46,6 +46,7 @@ func main() {
 	routes.SetupBusinessRoutes(app, db, containerService)
 	routes.SetupUserRoutes(app, db, containerService)
 	routes.SetupAuthRoutes(app, containerService)
+	routes.SetupProductRoutes(app, db, containerService)
 	// Start the server
 	log.Fatal(app.Listen(":3000"))
 }
